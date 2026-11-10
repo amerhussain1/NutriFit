@@ -1,0 +1,855 @@
+NUTRIFIT COMPLETE PROJECT REQUIREMENTS AND OPENCODE IMPLEMENTATION
+SPECIFICATION Version: 1.0 Date: 05 November 2026
+
+======================================================================
+0. IMPORTANT SECURITY AND CREDENTIAL HANDLING
+======================================================================
+
+The owner has supplied project configuration details in the
+conversation. Two sensitive credentials (the Supabase database password
+and Gemini API key) were exposed in chat. Do NOT copy, hardcode, print,
+commit, or reuse those exposed values.
+
+REQUIRED OWNER ACTIONS BEFORE REAL INTEGRATION: 1. Reset the Supabase
+database password in Supabase Dashboard > Project Settings > Database.
+2. Revoke the exposed Gemini API key in Google AI Studio and create a
+replacement. 3. Store the new database password only in a local,
+untracked environment file or secure secret manager. 4. Store the
+replacement Gemini key as a Supabase Edge Function secret. Never include
+it in the React Native bundle. 5. Ensure .env, .env.local, service-role
+keys, database URLs containing passwords, and secret files are in
+.gitignore. 6. Never ask the owner to paste secrets into source code or
+commit them.
+
+Use placeholders in documentation:
+SUPABASE_DB_PASSWORD=REPLACE_WITH_NEW_PASSWORD
+GEMINI_API_KEY=REPLACE_WITH_NEW_GEMINI_KEY
+SUPABASE_SERVICE_ROLE_KEY=SET_ONLY_AS_EDGE_FUNCTION_SECRET
+
+The Supabase publishable key is intended for client-side use, but it
+does not replace Row Level Security. Never use the service-role key in
+the mobile app.
+
+====================================================================== 1.
+PROJECT PURPOSE AND PRODUCT VISION
+======================================================================
+
+App name: NutriFit Android application ID / package name:
+com.dietplanner Initial platform: Android first; keep architecture ready
+for iOS later. Application type: React Native CLI mobile application.
+Primary audience: Pakistan and India. Primary purpose: Help users manage
+their diet, weight and nutrition with realistic South Asian meals that
+fit their food budget.
+
+NutriFit must be more than a generic calorie tracker. Its core
+differentiator is: - Desi/Pakistani/Indian meal recommendations. - Diet
+plans based on a user’s daily or monthly food budget. - Localized food
+availability and prices by country, city and currency. - Flexible meal
+replacement when a user dislikes a meal or cannot afford it. - Practical
+meal portions, calories, protein and other macros. - Support for
+English, Urdu and Roman Urdu.
+
+Do not assume that AI alone knows current food prices. The database is
+the source of truth for food nutrition and prices. AI may select and
+explain database-backed meals, but the backend must calculate and
+validate totals.
+
+======================================================================
+2. PROVIDED PROJECT CONFIGURATION
+======================================================================
+
+SUPABASE PROJECT Project URL: https://nelxdqlcykxcfczetftd.supabase.co
+
+Supabase publishable key: sb_publishable_z2R_rWm0vH0-B1hYbP_nZg_HufYFqaA
+
+Use the publishable key as the Supabase client key only. Confirm the
+current Supabase SDK configuration and do not mistake this for a
+service-role key.
+
+Supabase database host: db.nelxdqlcykxcfczetftd.supabase.co
+
+Database name: postgres
+
+Database user: postgres
+
+Database port: 5432
+
+Database connection string template (password intentionally omitted):
+postgresql://postgres:REPLACE_WITH_NEW_DATABASE_PASSWORD@db.nelxdqlcykxcfczetftd.supabase.co:5432/postgres
+
+Do not place the database connection string in the mobile app. Use it
+only for trusted migration tooling or a secure local development
+environment. Prefer Supabase CLI migrations and authenticated Supabase
+tooling where possible.
+
+GOOGLE SIGN-IN CONFIGURATION Android package name: com.dietplanner
+
+Google Web Client ID:
+313399800603-kbncjh643pebahneugbtgoq16uvu8ook.apps.googleusercontent.com
+
+Google Android Client ID:
+313399800603-idkgsvlavjv1nctk9a94b57249scom95.apps.googleusercontent.com
+
+Supabase Google provider has already been configured by the owner
+according to their statement. Verify the configuration rather than
+unnecessarily recreating it.
+
+Important: - The Web Client ID is commonly used as the OAuth audience /
+webClientId by the selected native Google sign-in library. - Android
+OAuth configuration must match package name com.dietplanner and the
+correct SHA-1 signing certificate fingerprints. - Confirm Supabase
+Auth > URL Configuration and Google provider settings. - Confirm the
+correct Supabase callback/redirect URL is registered in the Google OAuth
+configuration where required. - Do not expose or invent a Google client
+secret. - Test debug and release signing fingerprints separately. -
+Follow current library documentation; do not use obsolete Google Sign-In
+APIs.
+
+GEMINI Provider: Google Gemini API Project name: projects/506699071365
+Google Cloud project number: 506699071365 API key name: Gemini API Key
+
+The API key itself was exposed and must be revoked and replaced. Do not
+put the old key in this file, source code, app configuration, logs, or
+Git.
+
+Set the replacement key as a Supabase Edge Function secret named:
+GEMINI_API_KEY
+
+======================================================================
+3. REQUIRED TECHNOLOGY STACK
+======================================================================
+
+Use the following stack unless a genuine compatibility issue requires a
+documented alternative:
+
+-   React Native CLI (NOT Expo).
+-   TypeScript.
+-   NativeWind for styling, only if compatible with the installed React
+    Native version.
+-   Supabase JavaScript client.
+-   Supabase PostgreSQL.
+-   Supabase Auth.
+-   Google OAuth through Supabase Auth.
+-   Supabase Edge Functions for secure AI calls.
+-   Gemini API called only from the Edge Function.
+-   React Navigation.
+-   Redux Toolkit or another consistent state solution.
+-   React Hook Form and Zod for forms and validation, if compatible.
+-   A maintained chart library compatible with the selected React Native
+    version.
+-   AsyncStorage only for appropriate non-sensitive local persistence.
+-   Secure storage for tokens only if required by the selected
+    authentication flow and SDK.
+
+Before installing packages: 1. Inspect the current machine environment
+and project directory. 2. Check Node, npm, Java, Android SDK, Gradle and
+React Native compatibility. 3. Check current stable package versions and
+peer dependencies. 4. Do not install Expo packages or convert the app to
+Expo. 5. Avoid unnecessary dependencies.
+
+======================================================================
+4. FIRST TASK: INSPECT PROJECT AND DESIGN REFERENCES
+======================================================================
+
+Before changing files: - Inspect the complete project structure. -
+Identify whether the folder is empty or contains an existing React
+Native project. - Inspect package.json and existing dependencies. -
+Inspect all existing screens and components. - Inspect images,
+screenshots, icons and design references supplied by the owner. - Search
+project assets for reference screenshots and identify which screen each
+image represents. - Preserve useful existing assets and functionality. -
+Do not delete or overwrite existing work without explaining why.
+
+DESIGN REFERENCE REQUIREMENT: The owner mentioned that some screen
+designs were supplied as images. If those images are present in the
+project, inspect them and use them as the visual source of truth. Update
+the corresponding screens to match their layout, colors, typography,
+spacing, cards, navigation and component structure while adapting them
+to NutriFit functionality.
+
+If the images are not present or cannot be accessed, do not invent what
+they look like. Ask the owner to place the screenshots in a clearly
+named folder such as: design-references/ Then map each screenshot to its
+intended screen and implement it.
+
+Do not replace a supplied design with a generic template. Make all
+screens visually consistent.
+
+======================================================================
+5. APPLICATION DESIGN SYSTEM
+======================================================================
+
+Create a polished, modern nutrition and fitness visual identity.
+
+Design direction: - Fresh, premium, friendly and trustworthy. - Green as
+the primary nutrition/health accent. - White/light neutral surfaces in
+light mode. - Deep neutral surfaces in dark mode. - Clear typography and
+readable numbers. - Consistent spacing, border radii, shadows and icon
+style. - Responsive layouts for common Android screen sizes. - Respect
+Android safe areas, keyboard behavior and system navigation. -
+Accessible contrast and touch targets. - Reusable buttons, inputs,
+cards, chips, modals, progress bars and empty states.
+
+Create shared design tokens: - Colors. - Typography scale. - Spacing
+scale. - Border radius. - Elevation/shadows. - Icon sizes.
+
+Support light and dark themes. Do not use random one-off styling values
+throughout the app.
+
+The app should feel like a production fitness product, not a basic
+tutorial project.
+
+======================================================================
+6. REQUIRED SCREENS AND USER JOURNEY
+======================================================================
+
+A. SPLASH SCREEN - NutriFit logo and brand identity. - Short loading
+state. - Check authentication session and route appropriately.
+
+B. WELCOME / INTRODUCTION - Explain affordable Desi diet planning. -
+Clear Get Started and Sign In actions. - Do not make onboarding
+unnecessarily long.
+
+C. AUTHENTICATION - Google Sign-In. - Email/password sign-up. -
+Email/password login. - Password visibility toggle. - Forgot password. -
+Validation and useful error messages. - Loading and disabled states. -
+Logout. - Persistent authenticated session. - Correct handling of
+cancelled Google login.
+
+D. ONBOARDING / USER PROFILE Collect only the information needed to
+personalize a diet: - Name. - Date of birth or age. - Height and
+units. - Current weight and units. - Target weight. - Relevant sex value
+for validated energy calculations, with an inclusive and respectful
+UI. - Country: Pakistan or India. - City. - Activity level. - Goal:
+weight loss, weight gain or maintenance. - Dietary preference:
+vegetarian, non-vegetarian, eggetarian or other supported preference. -
+Allergies and excluded foods. - Food preferences and disliked
+ingredients. - Budget period: daily or monthly. - Budget amount. -
+Currency: PKR or INR, determined by country but editable where
+appropriate. - Optional meal schedule and cooking constraints.
+
+Allow users to edit their profile and preferences later. Validate age
+and measurements. Handle minors and special health circumstances safely.
+
+E. HOME DASHBOARD Show: - Greeting and profile shortcut. - Today’s
+calorie target and consumption. - Protein, carbohydrates and fat
+progress. - Water progress. - Current weight and goal progress. -
+Today’s meal plan. - Daily budget and estimated spending. - Quick
+actions: log food, add water, update weight, view diet plan. - Clear
+empty states if the user has not generated a plan.
+
+F. AI DIET PLAN - Weekly 7-day plan. - Breakfast, lunch, dinner and
+snacks. - Meal detail view. - Ingredients and quantities. - Preparation
+instructions. - Calories and macros. - Estimated cost and price
+freshness. - Mark meal as completed. - Save/favorite meal. - Regenerate
+plan. - Replace a single meal. - Show alternatives using database-backed
+food entries. - Show the plan’s total daily and weekly cost. - Show
+warnings if the plan cannot fit the selected budget.
+
+G. MEAL REPLACEMENT User can request: - Cheaper alternative. -
+Higher-protein alternative. - Vegetarian alternative. - No-cooking /
+quick alternative. - Replace disliked food. - Replace an unavailable
+ingredient.
+
+After replacement, backend must recalculate calories, macros and cost.
+Never trust client-provided totals.
+
+H. BUDGET SCREEN - Daily or monthly budget. - Estimated spending. -
+Remaining budget. - Weekly grocery estimate. - City and country. - Price
+last-updated labels. - Affordable substitutions. - Clear warning when
+current local prices are unavailable or stale.
+
+I. FOOD SEARCH / FOOD DETAILS - Search foods by English, Urdu and common
+Roman Urdu names where data is available. - Filter by country, category
+and dietary preference. - Show nutrition per 100g and per serving. -
+Show city-specific price estimate and update date. - Allow food logging.
+
+J. FOOD LOGGING - Add consumed food and quantity. - Select meal
+category. - Calculate nutrition from database. - Show daily totals. -
+Edit or delete own log entries.
+
+K. WEIGHT AND PROGRESS - Add weight measurement. - Weight history
+chart. - Goal progress. - Weekly and monthly summaries. - Do not claim
+that weight change is guaranteed.
+
+L. WATER TRACKING - Add/remove water quantity. - Daily progress. -
+Configurable units. - Store daily logs.
+
+M. GROCERY LIST - Generate a shopping list from the weekly plan. -
+Combine duplicate ingredients. - Quantities and estimated costs. - Mark
+items purchased. - Clearly identify price estimates and stale prices.
+
+N. FAVORITES - Saved meals. - Saved meal plans if supported. -
+Add/remove favorites.
+
+O. PROFILE AND SETTINGS - Edit profile. - Change goal and budget. -
+Change country/city. - Food preferences and allergies. - Language. -
+Theme. - Units. - Privacy and account deletion. - Logout.
+
+P. ADMIN / DATA MANAGEMENT Do not expose admin controls to normal users.
+Provide a secure method for authorized administrators to manage food
+records and prices. Enforce authorization on the backend, not just by
+hiding UI.
+
+======================================================================
+7. DATABASE ARCHITECTURE
+======================================================================
+
+Use PostgreSQL through Supabase. Create version-controlled SQL
+migrations in the repository. Do not make undocumented manual-only
+schema changes.
+
+Recommended tables:
+
+1.  profiles
+
+-   id UUID primary key referencing auth.users(id)
+-   full_name
+-   date_of_birth or age representation with privacy considered
+-   height_value
+-   height_unit
+-   current_weight_value
+-   weight_unit
+-   country_code
+-   city
+-   preferred_language
+-   created_at
+-   updated_at
+
+2.  user_goals
+
+-   id
+-   user_id
+-   goal_type
+-   target_weight
+-   target_date nullable
+-   activity_level
+-   created_at
+-   updated_at
+
+3.  user_preferences
+
+-   id
+-   user_id
+-   diet_type
+-   allergies
+-   excluded_ingredients
+-   disliked_foods
+-   preferred_foods
+-   cooking_constraints
+-   meal_schedule
+-   created_at
+-   updated_at
+
+4.  user_budgets
+
+-   id
+-   user_id
+-   budget_period (daily/monthly)
+-   amount
+-   currency_code (PKR/INR)
+-   country_code
+-   city
+-   effective_from
+-   created_at
+-   updated_at
+
+5.  food_items
+
+-   id
+-   canonical_name
+-   name_en
+-   name_ur nullable
+-   name_roman_ur nullable
+-   name_hi nullable
+-   country_availability
+-   category
+-   dietary_tags
+-   allergen_tags
+-   calories_per_100g
+-   protein_per_100g
+-   carbs_per_100g
+-   fat_per_100g
+-   fiber_per_100g nullable
+-   source_name
+-   source_reference nullable
+-   verified_at
+-   is_active
+-   created_at
+-   updated_at
+
+6.  food_servings
+
+-   id
+-   food_item_id
+-   serving_name
+-   grams
+-   notes nullable
+
+7.  food_prices
+
+-   id
+-   food_item_id
+-   country_code
+-   city
+-   price_amount
+-   currency_code
+-   quantity_amount
+-   quantity_unit
+-   price_source
+-   observed_at
+-   valid_until nullable
+-   created_at
+-   updated_at
+
+8.  meal_plans
+
+-   id
+-   user_id
+-   title
+-   start_date
+-   end_date
+-   goal_snapshot
+-   budget_snapshot
+-   currency_code
+-   status
+-   generation_metadata
+-   created_at
+-   updated_at
+
+9.  meal_plan_days
+
+-   id
+-   meal_plan_id
+-   plan_date
+-   target_calories
+-   estimated_cost
+-   currency_code
+
+10. meal_plan_items
+
+-   id
+-   meal_plan_day_id
+-   food_item_id nullable only for explicitly reviewed custom recipes
+-   meal_type
+-   quantity_grams
+-   serving_description
+-   calories
+-   protein
+-   carbohydrates
+-   fat
+-   estimated_cost
+-   preparation_instructions
+-   completion_status
+-   created_at
+-   updated_at
+
+11. food_logs
+
+-   id
+-   user_id
+-   food_item_id
+-   consumed_at
+-   meal_type
+-   quantity_grams
+-   calories_snapshot
+-   protein_snapshot
+-   carbs_snapshot
+-   fat_snapshot
+-   created_at
+
+12. weight_logs
+
+-   id
+-   user_id
+-   weight_value
+-   weight_unit
+-   measured_at
+-   notes nullable
+-   created_at
+
+13. water_logs
+
+-   id
+-   user_id
+-   quantity_ml
+-   consumed_at
+-   created_at
+
+14. user_favorites
+
+-   id
+-   user_id
+-   food_item_id nullable
+-   meal_plan_item_id nullable
+-   created_at
+
+15. grocery_lists
+
+-   id
+-   user_id
+-   meal_plan_id
+-   title
+-   status
+-   created_at
+-   updated_at
+
+16. grocery_list_items
+
+-   id
+-   grocery_list_id
+-   food_item_id
+-   quantity
+-   unit
+-   estimated_cost
+-   purchased
+-   created_at
+-   updated_at
+
+Add appropriate constraints, foreign keys, unique constraints, indexes
+and timestamps. Use numeric/decimal types for money and nutritional
+quantities where appropriate. Use ISO country and currency codes
+consistently.
+
+Review the schema before implementation. Avoid unnecessary duplication.
+If a normalized design requires additional tables, explain why.
+
+======================================================================
+8. SECURITY AND ROW LEVEL SECURITY
+======================================================================
+
+Enable RLS on every user-owned table.
+
+Policies must ensure: - Users can read and update only their own
+profile. - Users can read and modify only their own goals, preferences
+and budgets. - Users can access only their own meal plans and meal plan
+items through ownership checks. - Users can access only their own food
+logs, weight logs and water logs. - Users can manage only their own
+favorites and grocery lists. - Public food catalogue reads expose only
+approved active food records. - Only authorized administrators can
+create or edit food catalogue entries and prices. - Normal users cannot
+promote themselves to admin. - Admin status must be established using
+trusted server-side authorization, not a client-editable profile field.
+
+Test RLS using at least two separate test users. Verify that one user
+cannot read or modify another user’s records.
+
+Do not assume hiding a button is security.
+
+======================================================================
+9. GOOGLE SIGN-IN AND SUPABASE AUTH
+======================================================================
+
+Implement native Google Sign-In using a currently maintained React
+Native-compatible library and the documented Supabase OAuth/token flow.
+
+Requirements: - Use the supplied Android package name and Google client
+IDs. - Use the Web Client ID as the webClientId/audience where required
+by the chosen library. - Follow current Supabase documentation for
+signing in with an ID token. - Correctly handle the Android Google OAuth
+client configuration. - Persist and restore Supabase sessions. - Handle
+cancellation, invalid token, network failure and account errors. -
+Create or update the public profile after successful first sign-in. - Do
+not create duplicate profiles for the same auth user. - Test on a real
+Android device and emulator. - Verify debug and release SHA-1
+fingerprints. - Document all required Google Cloud and Supabase
+dashboard steps.
+
+Do not claim Google Sign-In works until it has been tested end-to-end.
+
+Also implement email/password registration, login, logout and password
+reset.
+
+======================================================================
+10. GEMINI AI AND SECURE BACKEND
+======================================================================
+
+Use Supabase Edge Functions for AI requests. The mobile application must
+never call Gemini with a secret key.
+
+Create functions such as: - generate-diet-plan - replace-meal -
+suggest-food-alternatives - explain-meal
+
+Use the current supported Gemini API model available to the configured
+project. Keep model name configurable and document it. Handle free-tier
+quotas, rate limits, timeouts and provider errors.
+
+AI request flow: 1. Authenticate the Supabase user. 2. Validate request
+and user ownership. 3. Read profile, goal, allergies, preferences and
+budget from the database. 4. Calculate a safe calorie and macro target
+using validated backend logic. 5. Fetch eligible food items and current
+city-specific prices. 6. Send only relevant database-backed options and
+constraints to Gemini. 7. Ask Gemini to return strict structured JSON
+containing selected food IDs, portions, meal grouping and explanations.
+8. Validate every returned food ID against the supplied eligible
+database entries. 9. Reject unknown food IDs, invalid quantities,
+allergens and unsupported ingredients. 10. Calculate nutrition and cost
+on the server from database values. 11. Check budget and nutritional
+constraints. 12. Save the validated plan in Supabase. 13. Return the
+saved plan to the app.
+
+Do not trust AI-generated prices, calories, macros or user IDs.
+Recalculate these values from trusted database records.
+
+If a price is missing or stale: - Mark it unavailable or stale. - Do not
+invent a price. - Ask for city or show a transparent estimate only if a
+documented fallback source exists. - Explain uncertainty to the user.
+
+Add rate limiting or another reasonable abuse-control mechanism. Avoid
+logging secrets or sensitive health data.
+
+======================================================================
+11. NUTRITION AND FOOD DATA RULES
+======================================================================
+
+Build a starter catalogue of commonly eaten Pakistani and Indian foods,
+ingredients and portions.
+
+Examples: - Wheat flour / atta. - Roti and chapati. - Rice. - Daal
+varieties. - Chana and chickpeas. - Eggs. - Chicken. - Fish. - Milk and
+dahi. - Seasonal vegetables. - Seasonal fruits. - Common cooking oils. -
+Common spices and ingredients.
+
+Nutrition data: - Use reputable food composition references. - Store
+source and verification date. - Prefer raw/cooked distinctions where
+relevant. - Avoid treating a recipe as identical to a single
+ingredient. - Do not invent nutrient values. - Make serving weights
+explicit. - Clearly distinguish cooked and uncooked quantities.
+
+Price data: - Prices vary by country, city, season and vendor. - Store
+observation date, quantity, unit, source and currency. - Do not present
+seed prices as live market prices. - Allow authorized admin updates. -
+Display last-updated dates. - If no verified local price exists, label
+it unavailable rather than fabricate a value.
+
+Check licensing and reuse conditions before importing external nutrition
+datasets into a commercial app.
+
+======================================================================
+12. DIET CALCULATION AND SAFETY
+======================================================================
+
+Use validated, documented nutrition calculation methods. Keep
+calculation logic separate from Gemini prompts.
+
+-   Calculate energy needs using an appropriate validated formula and
+    user inputs.
+-   Apply conservative, explainable goal adjustments.
+-   Do not recommend extreme calorie deficits or unsafe weight changes.
+-   Account for activity level.
+-   Do not assume all users have the same protein target.
+-   Consider age and special circumstances.
+-   Do not present the app as a medical professional.
+-   Provide appropriate guidance to consult a qualified dietitian/doctor
+    for medical conditions, pregnancy, eating disorder history, minors
+    or other higher-risk cases.
+-   Ask about allergies and strictly exclude allergenic foods.
+-   Never let an AI suggestion override a safety restriction.
+
+Clearly label targets as estimates, not diagnoses or medical
+prescriptions.
+
+======================================================================
+13. BUDGET ENGINE
+======================================================================
+
+Support: - Pakistan: PKR. - India: INR. - Daily budget. - Monthly
+budget. - City-specific price lookup. - Daily meal cost. - Weekly
+grocery estimate. - Remaining budget. - Meal replacement under budget.
+
+Rules: - Convert monthly budgets into a reasonable daily planning
+allowance using the selected calendar period or a clearly documented
+convention. - Use consistent quantity units. - Calculate ingredient cost
+from price per unit and required quantity. - Calculate total meal and
+daily cost on the backend. - Handle missing prices transparently. - If
+the budget is too low for a nutritionally adequate plan, explain the
+limitation and do not silently create an unsafe plan. - Do not guarantee
+that a diet can be achieved at a given budget.
+
+======================================================================
+14. LANGUAGE AND LOCALIZATION
+======================================================================
+
+Initial languages: - English. - Urdu. - Roman Urdu.
+
+Plan for Hindi support if feasible.
+
+Requirements: - Centralized translation files. - No hardcoded
+user-facing strings scattered across screens. - Correct Urdu RTL
+layout. - Test navigation, icons, alignment, text inputs and numbers in
+RTL. - Food search should support alternate names and spellings. - AI
+should respond in the user’s selected language. - Keep food catalogue
+names and canonical IDs independent of translated labels.
+
+======================================================================
+15. PROJECT STRUCTURE
+======================================================================
+
+Use a clean and maintainable structure similar to:
+
+src/ assets/ components/ common/ cards/ forms/ nutrition/ screens/ auth/
+onboarding/ home/ diet/ food/ budget/ tracking/ grocery/ profile/
+navigation/ services/ supabase/ auth/ ai/ food/ diet/ store/ hooks/
+types/ utils/ constants/ localization/ theme/
+
+supabase/ config.toml migrations/ functions/ generate-diet-plan/
+replace-meal/ suggest-food-alternatives/ explain-meal/ seed/
+
+docs/ SETUP.md DATABASE.md GOOGLE_SIGN_IN.md GEMINI_SETUP.md TESTING.md
+
+design-references/ (owner-provided screen images, if available)
+
+Also maintain: - AGENTS.md - DEVELOPMENT_STATUS.md - .env.example -
+.gitignore - README.md
+
+Adjust the structure if the existing project already has a sound
+architecture. Do not create duplicate folders or duplicate configuration
+files.
+
+======================================================================
+16. ENVIRONMENT VARIABLES
+======================================================================
+
+Create an .env.example containing placeholders only.
+
+Example client configuration:
+SUPABASE_URL=https://nelxdqlcykxcfczetftd.supabase.co
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_z2R_rWm0vH0-B1hYbP_nZg_HufYFqaA
+
+Only expose values intended for client use. Confirm the selected
+Supabase SDK’s current key configuration.
+
+Server-side secrets must be configured separately:
+GEMINI_API_KEY=SET_USING_SUPABASE_FUNCTION_SECRETS
+SUPABASE_SERVICE_ROLE_KEY=SET_USING_SECURE_SERVER_CONFIGURATION
+
+Do not place the database connection string or Gemini key in the React
+Native bundle.
+
+Document commands for setting Edge Function secrets, but do not run
+destructive commands or deploy without owner approval.
+
+======================================================================
+17. TESTING REQUIREMENTS
+======================================================================
+
+Implement and run: - TypeScript type checks. - ESLint. - Unit tests for
+nutrition calculations. - Unit tests for ingredient cost calculations. -
+Unit tests for budget validation. - Unit tests for meal replacement
+validation. - Tests for missing and stale food prices. - Tests for
+allergy exclusions. - RLS tests for two different users. -
+Authentication tests. - Edge Function validation tests. - Android debug
+build. - Manual Google Sign-In test. - Manual plan generation test. -
+Manual meal replacement test. - Manual offline/network error tests.
+
+Do not report a test as passed unless it was actually executed and
+passed. Clearly report anything not tested.
+
+======================================================================
+18. IMPLEMENTATION PHASES
+======================================================================
+
+PHASE 0 - PROJECT AUDIT AND PLAN - Inspect environment and project. -
+Inspect supplied design screenshots. - Confirm dependency
+compatibility. - Create roadmap and task list. - Identify owner actions
+and credentials required. - Do not start destructive changes.
+
+PHASE 1 - FOUNDATION - Create/configure React Native CLI project. - Set
+package ID to com.dietplanner. - Configure TypeScript, styling,
+navigation and theme. - Create reusable components. - Implement initial
+screens using design references.
+
+PHASE 2 - SUPABASE DATABASE - Configure Supabase CLI. - Create SQL
+migrations. - Create schema, relationships, indexes and constraints. -
+Add RLS policies. - Add seed scripts. - Test access isolation.
+
+PHASE 3 - AUTHENTICATION - Connect Supabase Auth. - Implement
+email/password. - Implement Google Sign-In. - Add session persistence
+and profile creation. - Document dashboard configuration and signing
+fingerprints.
+
+PHASE 4 - ONBOARDING AND PROFILE - Implement onboarding. - Save profile,
+goals, preferences and budget. - Implement profile editing and
+validation.
+
+PHASE 5 - FOOD CATALOGUE AND PRICE ENGINE - Add verified starter food
+records. - Add serving sizes. - Add price records and update dates. -
+Implement search and nutrition calculations. - Implement price and
+budget calculations.
+
+PHASE 6 - GEMINI BACKEND - Create secure Edge Functions. - Configure
+replacement Gemini API key as a secret. - Implement structured AI
+responses. - Validate food IDs, allergies, portions, macros and costs. -
+Save validated plans.
+
+PHASE 7 - DIET PLANNER - Generate 7-day plans. - Show meal details. -
+Implement meal replacement. - Implement regeneration and favorites. -
+Recalculate all totals on the backend.
+
+PHASE 8 - TRACKING AND GROCERY - Food logs. - Weight logs. - Water
+logs. - Progress charts. - Grocery list.
+
+PHASE 9 - POLISH AND QUALITY - Implement localization and RTL. -
+Implement dark mode. - Inspect every screen against supplied
+references. - Fix responsive layout and accessibility. - Test error and
+empty states. - Run lint, type checks and tests.
+
+PHASE 10 - ANDROID RELEASE PREPARATION - Configure app icon, splash
+screen and metadata. - Configure release signing safely. - Build and
+test release APK/AAB. - Document Play Store preparation. - Do not
+publish without explicit owner approval.
+
+======================================================================
+19. HOW OPENCODE MUST WORK
+======================================================================
+
+Do not attempt to build the entire application in one huge operation.
+
+At the beginning: 1. Read this entire specification. 2. Inspect the
+repository and environment. 3. Produce a detailed roadmap. 4. Identify
+missing credentials and dashboard actions. 5. Identify design references
+and map them to screens. 6. Explain the planned database schema. 7. Wait
+for owner approval before implementation.
+
+During development: - Work phase by phase. - Keep DEVELOPMENT_STATUS.md
+updated. - Explain files created and changed. - Run checks after each
+meaningful phase. - Fix errors before proceeding. - Ask before
+destructive database operations, resetting data, deleting files,
+deploying functions or publishing builds. - Never fabricate successful
+integration or tests. - Do not put secrets in logs, source code,
+screenshots or Git. - If a credential is missing, build the integration
+using environment placeholders and explain exactly how the owner
+supplies it. - Do not repeatedly ask for information already present in
+this specification. - Prefer small, reviewable changes and clear Git
+commits.
+
+======================================================================
+20. FIRST PROMPT TO OPENCODE
+======================================================================
+
+Read this complete NutriFit specification before doing anything.
+
+First inspect the current project folder, development environment,
+existing dependencies, source files, Android configuration and all
+available design-reference images.
+
+Then prepare a detailed implementation plan.
+
+Your first response must include: 1. Project audit and environment
+status. 2. Recommended folder structure. 3. Dependency list with
+compatibility notes. 4. Screen-by-screen implementation plan based on
+the supplied designs. 5. Database ERD/schema proposal and RLS strategy.
+6. Google Sign-In implementation plan using the supplied project
+identifiers. 7. Secure Gemini Edge Function architecture. 8. Food
+nutrition and local price data strategy. 9. Exact owner actions and any
+missing credentials. 10. Phase-by-phase testing plan.
+
+Do not start coding until I approve the plan.
+
+After approval, implement one phase at a time. Do not stop at a frontend
+prototype. The final goal is a functional Android application connected
+to Supabase with Google authentication, secure Gemini-powered Desi diet
+planning, local budget calculations, meal replacement and progress
+tracking.
+
+END OF SPECIFICATION

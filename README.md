@@ -1,97 +1,97 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# NutriFit
 
-# Getting Started
+NutriFit is a budget-aware, 7-day diet planner for Pakistan and India. It builds
+affordable meal plans from a local food catalogue, lets users log meals, water
+and weight, and uses Gemini only as an optional enhancement behind a Supabase
+Edge Function. When Supabase or Gemini is not configured the app runs in a
+fully local demo mode.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Stack
 
-## Step 1: Start Metro
+- React Native 0.85 + React 19 + TypeScript
+- Redux Toolkit, React Navigation, React Hook Form + Zod
+- Supabase Postgres, Auth, Row Level Security and Edge Functions (Deno)
+- Gemini 2.5 Flash via a server-side Edge Function only
+- Local fallback storage through AsyncStorage
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## Quick start
 
-To start the Metro dev server, run the following command from the root of your React Native project:
-
-```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
-```
-
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
+```powershell
+npm install
 npm run android
-
-# OR using Yarn
-yarn android
 ```
 
-### iOS
+Without a `.env` file the app starts in demo mode and stores everything locally
+on the device. Use the demo option on the sign-in screen to explore all screens.
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+To connect a real backend:
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
+```powershell
+Copy-Item .env.example .env
+# fill in SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY and GOOGLE_WEB_CLIENT_ID
+npm run android
 ```
 
-Then, and every time you update your native dependencies, run:
+`react-native-config` is wired into Gradle, so a native rebuild is required after
+changing `.env`.
 
-```sh
-bundle exec pod install
+## Scripts
+
+| Command | Purpose |
+| --- | --- |
+| `npm start` | Start Metro |
+| `npm run android` | Build and run Android |
+| `npm run typecheck` | TypeScript check (`tsc --noEmit`) |
+| `npm run lint` | ESLint |
+| `npm test` | Jest test suite |
+| `npm run seed:catalogue` | Regenerate the SQL food seed from `src/constants/foodSeed.ts` |
+
+## Backend setup
+
+The backend lives in `supabase/`:
+
+- `migrations/` - schema and RLS policies
+- `seed/0001_food_catalogue.sql` - starter catalogue with city price estimates
+- `functions/` - `generate-diet-plan`, `replace-meal`,
+  `suggest-food-alternatives`, `explain-meal`, `delete-account`
+
+Follow [docs/SETUP.md](docs/SETUP.md) for the full walkthrough. In short:
+
+```powershell
+supabase link --project-ref <project-ref>
+supabase db push
+supabase secrets set GEMINI_API_KEY=<new-key> GEMINI_MODEL=gemini-2.5-flash
+supabase functions deploy
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+Apply the seed with `psql` or the Supabase SQL editor after the migrations:
 
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
+```powershell
+psql $env:DATABASE_URL -f supabase/seed/0001_food_catalogue.sql
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+## Security notice
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+Credentials were shared in plain text during planning. Before using this project
+with real data, rotate the database password, the Supabase secret/service-role
+key and the Gemini API key. Never put the database password, service-role key or
+Gemini key in `.env`, the app bundle or git. See
+[docs/SETUP.md](docs/SETUP.md#security-checklist).
 
-## Step 3: Modify your app
+## Documentation
 
-Now that you have successfully run the app, let's make changes!
+- [Setup and deployment](docs/SETUP.md)
+- [Database and RLS](docs/DATABASE.md)
+- [Google Sign-In](docs/GOOGLE_SIGN_IN.md)
+- [Gemini](docs/GEMINI_SETUP.md)
+- [Testing](docs/TESTING.md)
+- [Development status](DEVELOPMENT_STATUS.md)
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+## Limitations
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+- Food prices are estimate data dated 2026-11-05, not live market prices.
+- Nutrition and cost figures are guidance, not medical advice.
+- The Gemini path falls back to a deterministic plan when the API key is absent
+  or the request fails.
+- Google Sign-In and live backend flows require owner-provided credentials and
+  have not been validated in this workspace.

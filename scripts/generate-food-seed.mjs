@@ -51,7 +51,7 @@ for (const food of foods) {
       food.protein,
     )}, ${round(food.carbs)}, ${round(food.fat)}, ${round(food.fiber)}, ${quote(
       food.instructions,
-    )}, ${quote('Seed starter dataset (USDA/IFCT-derived, verify before production)')})`,
+    )}, ${quote('Seed starter dataset (USDA/IFCT-derived, verify before production)')}, true)`,
   );
 
   servingLines.push(

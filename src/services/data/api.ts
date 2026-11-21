@@ -38,6 +38,33 @@ function shouldUseLocal(userId: string): boolean {
   return !isSupabaseConfigured || userId === 'demo-user';
 }
 
+async function functionErrorMessage(error: unknown): Promise<string> {
+  const fallback = error instanceof Error ? error.message : 'Edge Function request failed.';
+  const context = (error as { context?: Response | undefined })?.context;
+  if (!context) {
+    return fallback;
+  }
+  try {
+    const body = await context.clone().json();
+    if (body && typeof body === 'object') {
+      const message = (body as { error?: unknown; message?: unknown }).error ?? (body as { message?: unknown }).message;
+      if (typeof message === 'string' && message.trim()) {
+        return message;
+      }
+    }
+  } catch {
+    try {
+      const text = await context.clone().text();
+      if (text.trim()) {
+        return text.trim().slice(0, 300);
+      }
+    } catch {
+      // Keep the original error message.
+    }
+  }
+  return fallback;
+}
+
 function requireClient() {
   if (!supabase) {
     throw new Error('Supabase is not configured.');
@@ -483,7 +510,7 @@ export async function generatePlan(
     body: { start_date: input.startDate },
   });
   if (error) {
-    throw new Error(error.message);
+    throw new Error(await functionErrorMessage(error));
   }
   if (!data?.plan) {
     throw new Error(data?.error ?? 'Plan generation failed.');
@@ -543,7 +570,7 @@ export async function replaceMeal(
     body: { meal_plan_item_id: itemId, reason, food_item_id: foodItemId },
   });
   if (error) {
-    throw new Error(error.message);
+    throw new Error(await functionErrorMessage(error));
   }
   if (!data?.plan) {
     throw new Error(data?.error ?? 'Meal replacement failed.');

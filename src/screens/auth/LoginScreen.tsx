@@ -90,7 +90,10 @@ export default function LoginScreen({ navigation }: Props) {
           title={t('auth.google')}
           variant="outline"
           icon="logo-google"
-          onPress={() => dispatch(loginWithGoogle())}
+          onPress={() => {
+            console.log('[LoginScreen] Google button pressed');
+            dispatch(loginWithGoogle());
+          }}
         />
         <Button
           title={t('auth.noAccount')}

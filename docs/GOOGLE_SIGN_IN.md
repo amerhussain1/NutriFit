@@ -18,12 +18,22 @@ Debug keystore on Windows:
 ```powershell
 keytool -list -v `
   -alias androiddebugkey `
-  -keystore "$env:USERPROFILE\.android\debug.keystore" `
+  -keystore "android\app\debug.keystore" `
   -storepass android -keypass android
 ```
 
-Copy the `SHA1:` value. Use the release keystore fingerprint for production
-builds as well, otherwise release builds fail with `DEVELOPER_ERROR`.
+The debug build's actual fingerprint is:
+
+```
+SHA1: 5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25
+```
+
+Do not use the default `~/.android/debug.keystore` fingerprint
+(`B0:93:1F:74:04:C7:77:D4:6B:5E:7F:4E:62:68:0F:3E:3F:84:08:AB`); that keystore
+is not used by this build and registering it causes `DEVELOPER_ERROR`.
+
+Use the release keystore fingerprint for production builds as well, otherwise
+release builds fail with `DEVELOPER_ERROR`.
 
 ## 2. Configure Google Cloud
 
@@ -33,7 +43,8 @@ builds as well, otherwise release builds fail with `DEVELOPER_ERROR`.
    `GOOGLE_WEB_CLIENT_ID` and for Supabase.
 4. Create an OAuth client of type **Android**:
    - Package name: `com.dietplanner`
-   - SHA-1: the fingerprint from step 1
+   - SHA-1: `5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`
+     (debug build; add the release keystore SHA-1 separately for release builds)
 5. Copy the web client ID and secret into Supabase Auth -> Providers -> Google.
    Enable the provider.
 

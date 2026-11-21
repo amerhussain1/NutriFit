@@ -165,7 +165,19 @@ export async function deleteAccount(): Promise<void> {
   if (isSupabaseConfigured && supabase) {
     const { error } = await supabase.functions.invoke('delete-account', { body: {} });
     if (error) {
-      throw new Error(error.message);
+      let message = error.message;
+      const context = (error as { context?: Response }).context;
+      if (context) {
+        try {
+          const body = await context.clone().json();
+          if (typeof body?.error === 'string') {
+            message = body.error;
+          }
+        } catch {
+          // Keep the original error message.
+        }
+      }
+      throw new Error(message);
     }
     await supabase.auth.signOut();
   }
